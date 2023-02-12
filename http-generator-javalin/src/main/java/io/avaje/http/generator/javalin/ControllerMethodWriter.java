@@ -1,7 +1,14 @@
 package io.avaje.http.generator.javalin;
 
-import io.avaje.http.api.MediaType;
-import io.avaje.http.generator.core.*;
+import io.avaje.http.generator.core.Append;
+import io.avaje.http.generator.core.MethodParam;
+import io.avaje.http.generator.core.MethodReader;
+import io.avaje.http.generator.core.PathSegments;
+import io.avaje.http.generator.core.ProcessingContext;
+import io.avaje.http.generator.core.UType;
+import io.avaje.http.generator.core.Util;
+import io.avaje.http.generator.core.WebMethod;
+import io.avaje.http.generator.core.openapi.MediaType;
 
 /**
  * Write code to register Web route for a given controller method.
@@ -105,20 +112,19 @@ class ControllerMethodWriter {
 
   private void writeContextReturn(final String resultVariableName) {
     final var produces = method.produces();
-    if (produces == null || MediaType.APPLICATION_JSON.equalsIgnoreCase(produces)) {
+    if (produces == null || MediaType.APPLICATION_JSON.getValue().equalsIgnoreCase(produces)) {
       if (useJsonB) {
         var uType = UType.parse(method.returnType());
         if (uType.isGeneric() && uType.mainType().equals("java.util.concurrent.CompletableFuture")) {
           uType = uType.paramRaw();
         }
-
         writer.append("      %sJsonType.toJson(%s, ctx.contentType(\"application/json\").outputStream());", uType.shortName(), resultVariableName);
       } else {
         writer.append("      ctx.json(%s);", resultVariableName);
       }
-    } else if (MediaType.TEXT_HTML.equalsIgnoreCase(produces)) {
+    } else if (MediaType.TEXT_HTML.getValue().equalsIgnoreCase(produces)) {
       writer.append("      ctx.html(%s);", resultVariableName);
-    } else if (MediaType.TEXT_PLAIN.equalsIgnoreCase(produces)) {
+    } else if (MediaType.TEXT_PLAIN.getValue().equalsIgnoreCase(produces)) {
       writer.append("      ctx.contentType(\"text/plain\").result(%s);", resultVariableName);
     } else {
       writer.append("      ctx.contentType(\"%s\").result(%s);", produces, resultVariableName);
